@@ -5,7 +5,7 @@
   - Auswahl: Volume (mit Laufwerksbuchstaben) ODER Disk (RAW/ohne Buchstaben)
   - Disk-Preparation (DESTRUKTIV): init/partition/NTFS (wenn Disk gewählt)
   - Wenn Volume bereits BitLocker "ON": NTFS Quick-Format (RESET) und dann normal fortfahren
-  - BitLocker Enable (UsedSpaceOnly/Full) via RecoveryPasswordProtector (kein .bek)
+  - BitLocker Enable (Full-Disk Only) via RecoveryPasswordProtector (kein .bek)
   - JSON-Protokoll + Hash nach C:\elbcloud\diskseal\logs\disk-encryption
   - Audit-Report: HTML + Hash in ZIP nach C:\elbcloud\diskseal\reports\disk-encryption
   - VERPFLICHTEND: Nach 100% Verschlüsselung -> NTFS Quick-Format (für direkte Nutzbarkeit)
@@ -712,20 +712,15 @@ function Show-DiskSealInputDialog {
   $grpScope.Size = New-Object System.Drawing.Size(660, 85)
   $grpScope.Font = $font
 
-  $rbUsed = New-Object System.Windows.Forms.RadioButton
-  $rbUsed.Text = "Used Space Only (schneller)"
-  $rbUsed.Location = New-Object System.Drawing.Point(15, 25)
-  $rbUsed.Size = New-Object System.Drawing.Size(630, 25)
-  $rbUsed.Checked = $true
-  $rbUsed.Font = $font
-
   $rbFull = New-Object System.Windows.Forms.RadioButton
-  $rbFull.Text = "Full (kompletter Datenträger – dauert länger)"
-  $rbFull.Location = New-Object System.Drawing.Point(15, 50)
+  $rbFull.Text = "Full (kompletter Datenträger – erforderlich, um auch Alt-Daten abzudecken)"
+  $rbFull.Location = New-Object System.Drawing.Point(15, 35)
   $rbFull.Size = New-Object System.Drawing.Size(630, 25)
   $rbFull.Font = $font
+  $rbFull.Checked = $true
+  $rbFull.Enabled = $false
 
-  $grpScope.Controls.AddRange(@($rbUsed, $rbFull))
+  $grpScope.Controls.AddRange(@($rbFull))
 
   $chkAllowDiskPrep = New-Object System.Windows.Forms.CheckBox
   $chkAllowDiskPrep.Text = "Disk-Preparation erlauben (RAW/ohne Buchstaben → INIT + NTFS, DESTRUKTIV!)"
@@ -780,12 +775,10 @@ function Show-DiskSealInputDialog {
       return
     }
 
-    $scope = if ($rbFull.Checked) { "Full" } else { "UsedSpaceOnly" }
-
     $script:result = [pscustomobject]@{
       TicketId = $ticket
       OperatorName = $op
-      EncryptionScope = $scope
+      EncryptionScope = "Full"
       AllowDiskPreparation = [bool]$chkAllowDiskPrep.Checked
     }
 
